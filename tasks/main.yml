@@ -1,0 +1,14 @@
+- name: create ext volume for configs
+  file: state=directory path={{ ext_opentsdb_conf_volume }}
+
+- name: put OpenTSDB config
+  template: src=opentsdb.conf dest={{ ext_opentsdb_conf_volume }}/opentsdb.conf
+
+- name: check if an opentsdb container is started
+  command: bash -c "docker ps | grep opentsdb"
+  ignore_errors: True
+  register: result
+
+- name: start an opentsdb container
+  command: docker run -d -h opentsdb-{{ ansible_hostname }} --dns {{ ansible_docker0.ipv4.address }} --dns 8.8.8.8 --dns-search node.dc1.consul -p={{ opentsdb_port }}:{{ opentsdb_port }} -v {{ ext_opentsdb_conf_volume }}:/etc/opentsdb -name opentsdb gitinsky/opentsdb:0.1.0
+  when: result|failed
