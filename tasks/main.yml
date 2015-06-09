@@ -3,12 +3,34 @@
 
 - name: put OpenTSDB config
   template: src=opentsdb.conf dest={{ ext_opentsdb_conf_volume }}/opentsdb.conf
-
-- name: check if an opentsdb container is started
-  command: bash -c "docker ps | grep opentsdb"
-  ignore_errors: True
-  register: result
+  register: config
 
 - name: start an opentsdb container
-  command: docker run -d -h opentsdb-{{ ansible_hostname }} --dns {{ ansible_docker0.ipv4.address }} --dns 8.8.8.8 --dns-search node.dc1.consul -p={{ opentsdb_port }}:{{ opentsdb_port }} -v {{ ext_opentsdb_conf_volume }}:/etc/opentsdb -name opentsdb gitinsky/opentsdb:0.1.1
-  when: result|failed
+  docker:
+    image: gitinsky/opentsdb:0.1.1
+    state: "{{ 'restarted' if config.changed else 'reloaded' }}"
+    hostname: "opentsdb-{{ ansible_hostname }}"
+    dns:
+      - "{{ ansible_docker0.ipv4.address }}"
+      - 8.8.4.4
+    expose:
+      - "{{ opentsdb_port }}"
+    ports:
+        - "{{ opentsdb_port }}:{{ opentsdb_port }}"
+    volumes:
+      - "{{ ext_opentsdb_conf_volume }}:/etc/opentsdb"
+    name: opentsdb
+    restart_policy: always
+  tags:
+    - docker
+
+
+# command: docker run
+#  -d
+#  -h opentsdb-{{ ansible_hostname }}
+#  --dns {{ ansible_docker0.ipv4.address }}
+#  --dns 8.8.8.8
+#  --dns-search node.dc1.consul
+#  -p={{ opentsdb_port }}:{{ opentsdb_port }}
+#  -v {{ ext_opentsdb_conf_volume }}:/etc/opentsdb
+#  -name opentsdb gitinsky/opentsdb:0.1.1

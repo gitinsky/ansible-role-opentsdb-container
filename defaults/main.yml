@@ -1,0 +1,4 @@
+---
+ext_opentsdb_conf_volume: /var/lib/docker-extvols/opentsdb-configs
+opentsdb_port: 4242
+zookeeper_quorum: 127.0.0.1:2181
