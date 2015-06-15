@@ -1,13 +1,19 @@
 - name: create ext volume for configs
   file: state=directory path={{ ext_opentsdb_conf_volume }}
 
+- name: create ext volume for logs
+  file: state=directory path={{ ext_opentsdb_logs_volume }}
+
+- name: create ext tmp volume
+  file: state=directory path={{ ext_opentsdb_tmp_volume }}
+
 - name: put OpenTSDB config
   template: src=opentsdb.conf dest={{ ext_opentsdb_conf_volume }}/opentsdb.conf
   register: config
 
 - name: start an opentsdb container
   docker:
-    image: gitinsky/opentsdb:0.1.1
+    image: gitinsky/opentsdb:0.1.3
     state: "{{ 'restarted' if config.changed else 'reloaded' }}"
     hostname: "opentsdb-{{ ansible_hostname }}"
     dns:
@@ -19,6 +25,8 @@
         - "{{ opentsdb_port }}:{{ opentsdb_port }}"
     volumes:
       - "{{ ext_opentsdb_conf_volume }}:/etc/opentsdb"
+      - "{{ ext_opentsdb_logs_volume }}:/var/log/opentsdb"
+      - "{{ ext_opentsdb_tmp_volume }}:/tmp"
     name: opentsdb
     restart_policy: always
   tags:
@@ -31,6 +39,9 @@
 #  --dns {{ ansible_docker0.ipv4.address }}
 #  --dns 8.8.8.8
 #  --dns-search node.dc1.consul
+#  --read-only=true
 #  -p={{ opentsdb_port }}:{{ opentsdb_port }}
 #  -v {{ ext_opentsdb_conf_volume }}:/etc/opentsdb
-#  -name opentsdb gitinsky/opentsdb:0.1.1
+#  -v {{ ext_opentsdb_logs_volume }}:/var/log/opentsdb
+#  -v {{ ext_opentsdb_tmp_volume }}:/tmp
+#  -name opentsdb gitinsky/opentsdb:0.1.3
