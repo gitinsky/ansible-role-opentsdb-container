@@ -7,13 +7,19 @@
 - name: create ext tmp volume
   file: state=directory path={{ ext_opentsdb_tmp_volume }}
 
+- name: add localhost to /etc/hosts
+  lineinfile: dest={{ ext_opentsdb_conf_volume }}/hosts regexp='.*localhost' line='127.0.0.1 localhost.localdomain localhost' create=yes
+
+- name: add opentsdb-{{ ansible_hostname }} to /etc/hosts
+  lineinfile: dest={{ ext_opentsdb_conf_volume }}/hosts regexp='.*localhost' line='127.0.0.1 opentsdb-{{ ansible_hostname }}' create=yes
+
 - name: put OpenTSDB config
   template: src=opentsdb.conf dest={{ ext_opentsdb_conf_volume }}/opentsdb.conf
   register: config
 
 - name: start an opentsdb container
   docker:
-    image: gitinsky/opentsdb:0.1.3
+    image: gitinsky/opentsdb:0.1.4
     state: "{{ 'restarted' if config.changed else 'reloaded' }}"
     hostname: "opentsdb-{{ ansible_hostname }}"
     dns:
