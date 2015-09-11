@@ -22,9 +22,7 @@
     image: gitinsky/opentsdb:0.1.5
     state: "{{ 'restarted' if config.changed else 'reloaded' }}"
     hostname: "opentsdb-{{ ansible_hostname }}"
-    dns:
-      - "{{ docker_dns_1 }}"
-      - "{{ docker_dns_2 }}"
+    dns: "{{ docker_dns_servers }}"
     expose:
       - "{{ opentsdb_port }}"
     ports:

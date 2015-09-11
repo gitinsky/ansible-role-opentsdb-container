@@ -2,4 +2,6 @@
 ext_opentsdb_conf_volume: /var/lib/docker-extvols/opentsdb-configs
 opentsdb_port: 4242
 zookeeper_quorum: 127.0.0.1:2181
+docker_dns_1: "{{ ansible_docker0.ipv4.address }}"
 docker_dns_2: 8.8.4.4
+docker_dns_servers: [ "{{ docker_dns_1 }}", "{{ docker_dns_2 }}" ]
